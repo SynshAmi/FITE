@@ -7,6 +7,5 @@
   
   <modules>
     <module>spring-boot-rest</module>
-    <module>uppy-file-upload</module>
   </modules>
 </project>

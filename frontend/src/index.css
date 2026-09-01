@@ -1,0 +1,278 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap');
+
+:root {
+  --bg: #10131a;
+  --bg-card: rgba(16, 19, 26, 0.4);
+  --text-main: #e1e2eb;
+  --text-dim: #ccc3da;
+  --primary: #d1bcff;
+  --primary-glow: #7000ff;
+  --secondary: #00eefc;
+  --error: #ffb4ab;
+  --error-bg: rgba(147, 0, 10, 0.2);
+  --success: #00eefc;
+  --success-bg: rgba(0, 104, 111, 0.2);
+  
+  --border-light: rgba(255, 255, 255, 0.1);
+  --border-glow: rgba(112, 0, 255, 0.5);
+  
+  --font-display: 'Montserrat', sans-serif;
+  --font-body: 'Inter', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  background-color: var(--bg);
+  color: var(--text-main);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-image: radial-gradient(circle at 50% 0%, rgba(112, 0, 255, 0.15), transparent 50%),
+                    radial-gradient(circle at 100% 100%, rgba(0, 238, 252, 0.05), transparent 50%);
+  background-attachment: fixed;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.app-container {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 24px;
+  width: 100%;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  padding: 32px 0;
+  cursor: pointer;
+}
+
+.header h1 {
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 800;
+  margin: 0;
+  background: linear-gradient(45deg, var(--primary), var(--secondary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Glassmorphism Classes */
+.glass-panel {
+  background: var(--bg-card);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border-light);
+  border-radius: 16px;
+  padding: 32px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Specular highlight on top-left */
+.glass-panel::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: 16px;
+  border: 1px solid transparent;
+  background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, transparent 40%) border-box;
+  -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: destination-out;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+.glass-panel.floating {
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  background: rgba(16, 19, 26, 0.6);
+  box-shadow: 0 10px 40px rgba(0, 240, 255, 0.15);
+}
+
+h2, h3 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  margin-top: 0;
+}
+
+.text-mono {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  color: var(--text-dim);
+}
+
+/* Typography Helpers */
+.title-large {
+  font-family: var(--font-display);
+  font-size: 64px;
+  font-weight: 800;
+  line-height: 72px;
+  letter-spacing: -0.02em;
+  background: linear-gradient(45deg, var(--primary), var(--secondary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 16px;
+}
+
+.subtitle {
+  font-size: 24px;
+  color: var(--text-dim);
+  margin-bottom: 48px;
+}
+
+/* Buttons */
+.btn {
+  background: linear-gradient(45deg, var(--primary-glow), var(--secondary));
+  color: #fff;
+  border: none;
+  border-radius: 24px;
+  padding: 12px 24px;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 1px;
+  background: rgba(255,255,255,0.4);
+}
+
+.btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 20px var(--primary-glow);
+}
+
+.btn:active {
+  transform: scale(0.98);
+}
+
+.btn.secondary {
+  background: transparent;
+  border: 1px solid var(--border-light);
+  color: var(--text-main);
+}
+.btn.secondary:hover {
+  background: rgba(255,255,255,0.05);
+  box-shadow: none;
+}
+
+/* Inputs */
+.input {
+  background: rgba(0,0,0,0.3);
+  border: 1px solid var(--border-light);
+  border-radius: 12px;
+  padding: 16px;
+  color: var(--text-main);
+  font-family: var(--font-mono);
+  font-size: 16px;
+  width: 100%;
+  transition: all 0.3s;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--secondary);
+  box-shadow: 0 0 10px rgba(0, 238, 252, 0.3);
+}
+
+/* Layout utilities */
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.flex-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.drop-hub {
+  border: 2px dashed var(--border-light);
+  border-radius: 50%;
+  width: 300px;
+  height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin: 0 auto;
+}
+
+.drop-hub:hover, .drop-hub.active {
+  border-color: var(--primary);
+  box-shadow: 0 0 40px rgba(112, 0, 255, 0.2);
+  background: rgba(112, 0, 255, 0.05);
+}
+
+/* Progress */
+.progress-ring-container {
+  position: relative;
+  width: 200px;
+  height: 200px;
+  margin: 0 auto;
+}
+
+.progress-info {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.status-badge {
+  padding: 4px 12px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+}
+.status-badge.error { background: var(--error-bg); color: var(--error); border-color: var(--error); }
+.status-badge.success { background: var(--success-bg); color: var(--success); border-color: var(--success); }
+
+.copy-box {
+  display: flex;
+  align-items: center;
+  background: rgba(0,0,0,0.3);
+  border: 1px solid var(--border-light);
+  border-radius: 12px;
+  padding: 8px 8px 8px 16px;
+  gap: 16px;
+}
+.copy-box input {
+  background: transparent;
+  border: none;
+  color: var(--secondary);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  flex: 1;
+  outline: none;
+}
+
