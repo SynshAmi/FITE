@@ -33,6 +33,7 @@ public class LargeFileBenchmark {
     private TestRestTemplate restTemplate;
 
     // Set to @Test locally to run the benchmark. @Disabled by default so it doesn't run during normal CI builds.
+    @Disabled
     @Test
     public void runBenchmark() throws Exception {
         long[] chunkSizesToTest = {
