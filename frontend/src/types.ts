@@ -4,10 +4,12 @@ export interface TransferMetadata {
   transferCode?: string;
   chunkSize: number;
   totalChunks: number;
+  createdAt?: string;
   expiresAt: string;
   fileName: string;
   fileSize: number;
   contentType: string;
+  status?: 'CREATED' | 'UPLOADING' | 'COMPLETE' | 'EXPIRED' | 'FAILED';
 }
 
 export type TransferStatus = 'idle' | 'starting' | 'progressing' | 'paused' | 'error' | 'completed' | 'waiting';
