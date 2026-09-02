@@ -2,6 +2,7 @@ package me.desair.spring.transfer.application;
 
 import me.desair.spring.transfer.application.exception.ChunkNotAvailableException;
 import me.desair.spring.transfer.application.exception.TransferNotFoundException;
+import me.desair.spring.transfer.domain.TransferExpiredException;
 import me.desair.spring.transfer.domain.TransferStatus;
 import me.desair.spring.transfer.infrastructure.persistence.TransferChunkEntity;
 import me.desair.spring.transfer.infrastructure.persistence.TransferChunkRepository;
@@ -44,7 +45,7 @@ public class TransferService {
 
     private Transfer toDomain(TransferEntity entity) {
         Transfer domain = new Transfer(
-            entity.getTransferId(), entity.getShareToken(), entity.getFileName(),
+            entity.getTransferId(), entity.getShareToken(), entity.getTransferCode(), entity.getFileName(),
             entity.getContentType(), entity.getFileSize(), entity.getChunkSize(),
             entity.getTotalChunks(), entity.getStatus(), entity.getCreatedAt(), entity.getExpiresAt()
         );
@@ -61,6 +62,7 @@ public class TransferService {
         TransferEntity entity = transferRepository.findById(domain.getId()).orElseGet(TransferEntity::new);
         entity.setTransferId(domain.getId());
         entity.setShareToken(domain.getShareToken());
+        entity.setTransferCode(domain.getTransferCode());
         entity.setFileName(domain.getFileName());
         entity.setContentType(domain.getContentType());
         entity.setFileSize(domain.getFileSize());
@@ -98,6 +100,19 @@ public class TransferService {
             .orElseThrow(() -> new TransferNotFoundException("Transfer not found"));
         Transfer domain = toDomain(entity);
         domain.checkAccess(token, Instant.now());
+        return entity;
+    }
+
+    public TransferEntity getTransferByCode(String transferCode) {
+        if (transferCode == null || transferCode.isBlank()) {
+            throw new TransferNotFoundException("Transfer not found");
+        }
+        TransferEntity entity = transferRepository.findByTransferCode(transferCode.trim().toUpperCase())
+            .orElseThrow(() -> new TransferNotFoundException("Transfer not found"));
+        Transfer domain = toDomain(entity);
+        if (domain.isExpired(Instant.now())) {
+            throw new TransferExpiredException("Transfer is expired");
+        }
         return entity;
     }
 

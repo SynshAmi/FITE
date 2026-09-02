@@ -70,24 +70,39 @@ export async function completeTransfer(transferId: string): Promise<void> {
   }
 }
 
-export async function getTransferDetails(transferId: string, token: string): Promise<TransferMetadata> {
-  const response = await fetch(`/api/transfers/${transferId}?token=${encodeURIComponent(token)}`);
+export async function getTransferDetails(transferId: string, token?: string): Promise<TransferMetadata> {
+  const cleanToken = token?.trim();
+  const url = cleanToken ? `/api/transfers/${transferId}?token=${encodeURIComponent(cleanToken)}` : `/api/transfers/${transferId}`;
+  const response = await fetch(url);
   if (!response.ok) {
     await handleResponseError(response, 'Failed to get transfer details');
   }
   return response.json();
 }
 
-export async function getAvailableChunks(transferId: string, token: string): Promise<number[]> {
-  const response = await fetch(`/api/transfers/${transferId}/chunks?token=${encodeURIComponent(token)}`);
+export async function getTransferByCode(transferCode: string): Promise<TransferMetadata> {
+  const cleanCode = encodeURIComponent(transferCode.trim().toUpperCase());
+  const response = await fetch(`/api/transfers/code/${cleanCode}`);
+  if (!response.ok) {
+    await handleResponseError(response, 'Transfer not found');
+  }
+  return response.json();
+}
+
+export async function getAvailableChunks(transferId: string, token?: string): Promise<number[]> {
+  const cleanToken = token?.trim();
+  const url = cleanToken ? `/api/transfers/${transferId}/chunks?token=${encodeURIComponent(cleanToken)}` : `/api/transfers/${transferId}/chunks`;
+  const response = await fetch(url);
   if (!response.ok) {
     await handleResponseError(response, 'Failed to get chunk availability');
   }
   return response.json();
 }
 
-export async function downloadChunk(transferId: string, chunkIndex: number, token: string): Promise<{blob: Blob, checksum: string | null}> {
-  const response = await fetch(`/api/transfers/${transferId}/chunks/${chunkIndex}?token=${encodeURIComponent(token)}`);
+export async function downloadChunk(transferId: string, chunkIndex: number, token?: string): Promise<{blob: Blob, checksum: string | null}> {
+  const cleanToken = token?.trim();
+  const url = cleanToken ? `/api/transfers/${transferId}/chunks/${chunkIndex}?token=${encodeURIComponent(cleanToken)}` : `/api/transfers/${transferId}/chunks/${chunkIndex}`;
+  const response = await fetch(url);
   if (!response.ok) {
     await handleResponseError(response, `Failed to download chunk ${chunkIndex}`);
   }

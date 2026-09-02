@@ -106,7 +106,7 @@ public class ProgressiveTransferIntegrationTest {
         // 10. Receiver gets final state (Final Correctness)
         mockMvc.perform(get("/api/transfers/" + tId + "?token=" + token))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("COMPLETED"));
+                .andExpect(jsonPath("$.status").value("COMPLETE"));
                 
         mockMvc.perform(get("/api/transfers/" + tId + "/chunks?token=" + token))
                 .andExpect(status().isOk())

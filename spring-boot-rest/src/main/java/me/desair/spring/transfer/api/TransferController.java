@@ -36,6 +36,11 @@ public class TransferController {
         return ResponseEntity.ok(transferService.getTransfer(transferId, token));
     }
 
+    @GetMapping("/code/{transferCode}")
+    public ResponseEntity<TransferEntity> getTransferByCode(@PathVariable String transferCode) {
+        return ResponseEntity.ok(transferService.getTransferByCode(transferCode));
+    }
+
     @GetMapping("/{transferId}/chunks")
     public ResponseEntity<List<Integer>> getAvailableChunks(
             @PathVariable String transferId,

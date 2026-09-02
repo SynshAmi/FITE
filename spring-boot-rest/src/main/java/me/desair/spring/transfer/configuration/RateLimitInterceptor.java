@@ -71,7 +71,7 @@ public class RateLimitInterceptor implements HandlerInterceptor {
 
         if (path.matches("^/api/transfers$") && "POST".equalsIgnoreCase(method)) {
             bucket = getCreateBucket(ip);
-        } else if (path.matches("^/api/transfers/[^/]+$") && "GET".equalsIgnoreCase(method)) {
+        } else if ((path.matches("^/api/transfers/[^/]+$") || path.matches("^/api/transfers/code/[^/]+$")) && "GET".equalsIgnoreCase(method)) {
             bucket = getLookupBucket(ip);
         } else if (path.matches("^/api/transfers/[^/]+/chunks$") && "GET".equalsIgnoreCase(method)) {
             // Polling

@@ -28,6 +28,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest(properties = {
+    "transfer.chunk-size-bytes=1024",
     "storage.type=local",
     "storage.local.directory=target/test-cleanup-storage"
 })
@@ -63,7 +64,6 @@ public class TransferCleanupIntegrationTest {
         req.setFileName("test.txt");
         req.setFileSize(2048L);
         req.setContentType("text/plain");
-        req.setChunkSize(1024L);
 
         String json = mockMvc.perform(post("/api/transfers")
                 .contentType(MediaType.APPLICATION_JSON)

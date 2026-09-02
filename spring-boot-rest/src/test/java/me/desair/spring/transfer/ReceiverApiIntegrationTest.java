@@ -45,6 +45,7 @@ public class ReceiverApiIntegrationTest {
         TransferEntity t = new TransferEntity();
         t.setTransferId("tf_test");
         t.setShareToken("st_test");
+        t.setTransferCode("ABC7K9");
         t.setFileName("hello.txt");
         t.setFileSize(100);
         t.setChunkSize(100);
@@ -80,7 +81,7 @@ public class ReceiverApiIntegrationTest {
         
         mockMvc.perform(get("/api/transfers/tf_test?token=wrong_token"))
                 .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.code").value("DOMAIN_ERROR"));
+                .andExpect(jsonPath("$.code").value("FORBIDDEN"));
     }
 
     @Test
@@ -90,6 +91,26 @@ public class ReceiverApiIntegrationTest {
         mockMvc.perform(get("/api/transfers/tf_test?token=st_test"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.transferId").value("tf_test"));
+    }
+
+    @Test
+    void testTransferCodeLookupSuccess() throws Exception {
+        when(transferRepository.findByTransferCode("ABC7K9")).thenReturn(Optional.of(mockTransfer()));
+
+        mockMvc.perform(get("/api/transfers/code/ABC7K9"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.transferId").value("tf_test"))
+                .andExpect(jsonPath("$.shareToken").value("st_test"))
+                .andExpect(jsonPath("$.transferCode").value("ABC7K9"));
+    }
+
+    @Test
+    void testTransferCodeLookupNotFound() throws Exception {
+        when(transferRepository.findByTransferCode("UNKNOWN")).thenReturn(Optional.empty());
+
+        mockMvc.perform(get("/api/transfers/code/UNKNOWN"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("TRANSFER_NOT_FOUND"));
     }
 
     @Test
@@ -110,7 +131,7 @@ public class ReceiverApiIntegrationTest {
         when(chunkRepository.findByTransferIdAndChunkIndex("tf_test", 0)).thenReturn(Optional.of(mockChunk()));
         
         ByteArrayInputStream bais = new ByteArrayInputStream("hello".getBytes());
-        when(chunkStorage.getChunk("tf_test", 0)).thenReturn(bais);
+        when(chunkStorage.getChunk("tf_test", 0, "abcdef")).thenReturn(bais);
 
         mockMvc.perform(get("/api/transfers/tf_test/chunks/0?token=st_test"))
                 .andExpect(status().isOk())
@@ -124,7 +145,7 @@ public class ReceiverApiIntegrationTest {
         when(chunkRepository.findByTransferIdOrderByChunkIndexAsc("tf_test")).thenReturn(List.of(mockChunk()));
         when(chunkRepository.findByTransferIdAndChunkIndex("tf_test", 0)).thenReturn(Optional.of(mockChunk()));
         
-        when(chunkStorage.getChunk("tf_test", 0)).thenThrow(new StorageFileNotFoundException("missing"));
+        when(chunkStorage.getChunk("tf_test", 0, "abcdef")).thenThrow(new StorageFileNotFoundException("missing"));
 
         mockMvc.perform(get("/api/transfers/tf_test/chunks/0?token=st_test"))
                 .andExpect(status().isInternalServerError())
@@ -138,7 +159,7 @@ public class ReceiverApiIntegrationTest {
         when(chunkRepository.findByTransferIdOrderByChunkIndexAsc("tf_test")).thenReturn(List.of());
         
         // Even if the object exists in storage (orphaned data), the API must return CHUNK_NOT_AVAILABLE
-        when(chunkStorage.exists("tf_test", 0)).thenReturn(true);
+        when(chunkStorage.exists(eq("tf_test"), eq(0), any())).thenReturn(true);
 
         mockMvc.perform(get("/api/transfers/tf_test/chunks/0?token=st_test"))
                 .andExpect(status().isNotFound())

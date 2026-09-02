@@ -7,6 +7,9 @@ const DB_NAME = 'TransferReceiverDB';
 const STORE_NAME = 'local_chunks';
 const MAX_CHUNK_RETRIES = 3;
 
+export const RECEIVER_ACTIVE_TRANSFER_KEY = 'receiver_active_transfer_id';
+export const RECEIVER_TRANSFER_PREFIX = 'receiver_transfer_';
+
 async function initDB(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
     const request = indexedDB.open(DB_NAME, 1);
@@ -20,7 +23,7 @@ async function initDB(): Promise<IDBDatabase> {
   });
 }
 
-async function getLocalChunks(transferId: string): Promise<number[]> {
+export async function getLocalChunks(transferId: string): Promise<number[]> {
   try {
     const db = await initDB();
     return new Promise((resolve) => {
@@ -33,6 +36,19 @@ async function getLocalChunks(transferId: string): Promise<number[]> {
   } catch (e) {
     return []; // Fallback to memory
   }
+}
+
+export async function clearLocalChunks(transferId: string): Promise<void> {
+  try {
+    const db = await initDB();
+    await new Promise<void>((resolve, reject) => {
+      const tx = db.transaction(STORE_NAME, 'readwrite');
+      const store = tx.objectStore(STORE_NAME);
+      const req = store.delete(transferId);
+      req.onsuccess = () => resolve();
+      req.onerror = () => reject(req.error);
+    });
+  } catch (e) {}
 }
 
 async function saveLocalChunk(transferId: string, chunkIndex: number) {
@@ -90,13 +106,37 @@ export class DownloadManager {
 
   private notify() {
     if (this.onProgressCb && this.transferDetails) {
-      const downloadedBytes = this.downloadedChunks.size * this.transferDetails.chunkSize;
       const totalBytes = this.transferDetails.fileSize;
+      const totalChunks = this.transferDetails.totalChunks;
+      const chunkSize = this.transferDetails.chunkSize;
+      
+      let downloadedBytes = 0;
+      if (this.downloadedChunks.size === totalChunks) {
+        downloadedBytes = totalBytes;
+      } else {
+        for (const idx of this.downloadedChunks) {
+          if (idx === totalChunks - 1) {
+            const remainder = totalBytes % chunkSize;
+            downloadedBytes += remainder === 0 ? chunkSize : remainder;
+          } else {
+            downloadedBytes += chunkSize;
+          }
+        }
+      }
       const boundedBytes = Math.min(downloadedBytes, totalBytes);
+      
+      let progressPercent = 0;
+      if (totalBytes === 0 || this.state === 'completed' || this.downloadedChunks.size >= totalChunks) {
+        progressPercent = 100;
+      } else {
+        const calculated = Math.floor((boundedBytes / totalBytes) * 100);
+        progressPercent = Math.min(99, Math.max(0, calculated));
+      }
+
       this.onProgressCb({
         status: this.state,
-        progress: totalBytes === 0 ? 100 : Math.round((boundedBytes / totalBytes) * 100),
-        transferredBytes: boundedBytes,
+        progress: progressPercent,
+        transferredBytes: this.state === 'completed' ? totalBytes : boundedBytes,
         totalBytes,
         metadata: this.transferDetails,
         error: this.error
@@ -158,10 +198,25 @@ export class DownloadManager {
       if (this.currentOperationId !== opId || this.state !== 'starting') return;
       this.downloadedChunks = new Set(local);
 
+      localStorage.setItem(RECEIVER_ACTIVE_TRANSFER_KEY, this.transferId);
+      localStorage.setItem(RECEIVER_TRANSFER_PREFIX + this.transferId, JSON.stringify({
+        transferId: this.transferId,
+        token: this.token,
+        fileName: this.transferDetails.fileName,
+        fileSize: this.transferDetails.fileSize,
+        chunkSize: this.transferDetails.chunkSize,
+        totalChunks: this.transferDetails.totalChunks,
+      }));
+
       this.state = 'progressing';
       this.cancelSource = new AbortController();
       this.notify();
-      this.startPolling();
+      
+      if (this.downloadedChunks.size === this.transferDetails.totalChunks) {
+        this.processQueue();
+      } else {
+        this.startPolling();
+      }
     } catch (e) {
       if ((e as any).name === 'AbortError') {
         this.state = 'idle';
@@ -240,6 +295,11 @@ export class DownloadManager {
         this.currentPollInterval = Math.min(this.currentPollInterval * 1.5, this.MAX_POLL_INTERVAL);
       }
       
+      if (this.downloadedChunks.size === this.transferDetails.totalChunks) {
+        this.processQueue();
+        return;
+      }
+      
       if (this.availableChunks.length === this.downloadedChunks.size && this.downloadedChunks.size < this.transferDetails.totalChunks) {
          if (this.state !== 'waiting') {
              this.state = 'waiting';
@@ -282,10 +342,17 @@ export class DownloadManager {
     await currentWrite;
   }
 
+  private cleanupLocalStorage() {
+    localStorage.removeItem(RECEIVER_ACTIVE_TRANSFER_KEY);
+    localStorage.removeItem(RECEIVER_TRANSFER_PREFIX + this.transferId);
+    clearLocalChunks(this.transferId);
+  }
+
   private async processQueue() {
-    if (this.state !== 'progressing' || !this.transferDetails) return;
+    if ((this.state !== 'progressing' && this.state !== 'waiting') || !this.transferDetails) return;
 
     if (this.downloadedChunks.size === this.transferDetails.totalChunks) {
+      if (this.activeDownloads > 0) return;
       this.stopPolling();
       
       try {
@@ -294,6 +361,7 @@ export class DownloadManager {
           await this.writable.close();
           this.writable = null;
         }
+        this.cleanupLocalStorage();
         this.state = 'completed';
         this.notify();
       } catch (err) {
@@ -368,7 +436,9 @@ export class DownloadManager {
       this.inProgressChunks.delete(chunkIndex);
       this.chunkRetryCounts.delete(chunkIndex);
       this.downloadedChunks.add(chunkIndex);
-      this.notify();
+      if (this.downloadedChunks.size < this.transferDetails.totalChunks) {
+        this.notify();
+      }
       
     } catch (e) {
       if (this.currentOperationId !== opId || this.state !== 'progressing') {
@@ -388,6 +458,7 @@ export class DownloadManager {
         }
         if (e.code === 'TRANSFER_EXPIRED' || e.code === 'TRANSFER_NOT_FOUND' || e.code === 'FORBIDDEN') {
           this.inProgressChunks.delete(chunkIndex);
+          this.cleanupLocalStorage();
           this.state = 'error';
           this.error = e;
           this.stopPolling();

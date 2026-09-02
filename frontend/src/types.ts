@@ -1,6 +1,7 @@
 export interface TransferMetadata {
   transferId: string;
   shareToken: string;
+  transferCode?: string;
   chunkSize: number;
   totalChunks: number;
   expiresAt: string;

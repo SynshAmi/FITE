@@ -17,6 +17,7 @@ public class TransferEntity {
     private String transferId;
 
     private String shareToken;
+    private String transferCode;
     private String fileName;
     private String contentType;
     private long fileSize;
