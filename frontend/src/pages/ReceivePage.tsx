@@ -13,6 +13,18 @@ export const ReceivePage: React.FC<{ onHome: () => void }> = ({ onHome }) => {
     });
   }, [manager]);
 
+  useEffect(() => {
+    const pathname = window.location.pathname;
+    if (pathname.startsWith('/download/')) {
+      const id = pathname.replace('/download/', '').split('/')[0];
+      const params = new URLSearchParams(window.location.search);
+      const token = params.get('token') || '';
+      if (id) {
+        setCode(token ? `${id}?token=${token}` : id);
+      }
+    }
+  }, []);
+
   const handleStart = (e: React.FormEvent) => {
     e.preventDefault();
     if (!code) return;

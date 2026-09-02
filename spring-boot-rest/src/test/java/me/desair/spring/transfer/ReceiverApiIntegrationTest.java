@@ -1,5 +1,11 @@
 package me.desair.spring.transfer;
 
+import me.desair.spring.transfer.infrastructure.persistence.TransferChunkEntity;
+import me.desair.spring.transfer.infrastructure.persistence.TransferChunkRepository;
+import me.desair.spring.transfer.infrastructure.persistence.TransferEntity;
+import me.desair.spring.transfer.infrastructure.persistence.TransferRepository;
+import me.desair.spring.transfer.infrastructure.storage.ChunkStorage;
+import me.desair.spring.transfer.infrastructure.storage.StorageFileNotFoundException;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;

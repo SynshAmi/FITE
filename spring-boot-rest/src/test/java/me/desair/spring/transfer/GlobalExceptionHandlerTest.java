@@ -1,7 +1,12 @@
 package me.desair.spring.transfer;
 
+import me.desair.spring.transfer.api.ErrorResponse;
+import me.desair.spring.transfer.api.GlobalExceptionHandler;
+import me.desair.spring.transfer.application.exception.ChunkNotAvailableException;
+import me.desair.spring.transfer.application.exception.TransferNotFoundException;
 import me.desair.spring.transfer.domain.TransferDomainException;
 import me.desair.spring.transfer.domain.TransferExpiredException;
+import me.desair.spring.transfer.infrastructure.storage.StorageFileNotFoundException;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

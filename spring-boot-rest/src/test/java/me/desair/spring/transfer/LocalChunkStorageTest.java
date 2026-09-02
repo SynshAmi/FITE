@@ -1,5 +1,8 @@
 package me.desair.spring.transfer;
 
+import me.desair.spring.transfer.infrastructure.storage.LocalChunkStorage;
+import me.desair.spring.transfer.infrastructure.storage.StorageException;
+import me.desair.spring.transfer.infrastructure.storage.StorageFileNotFoundException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -9,7 +12,6 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -97,7 +99,7 @@ class LocalChunkStorageTest {
         String badTransferId = "../../../windows/system32";
         byte[] data = "Data".getBytes();
         
-        StorageException e1 = assertThrows(StorageException.class, () -> 
+        StorageException e1 = assertThrows(StorageException.class, () ->
             storage.putChunk(badTransferId, 0, new ByteArrayInputStream(data), data.length));
         assertTrue(e1.getMessage().contains("Invalid transferId"));
         
